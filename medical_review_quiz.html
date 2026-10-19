@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medical Review Quiz | Psychology & Community Medicine</title>
+<style>
+:root{
+  --sage:#8b9a6e; --cream:#f7f2eb; --sand:#eae2d6; --mist:#eeeeee;
+  --ink:#263126; --muted:#687064; --white:#fff; --line:#d9ded1;
+  --good:#2f6b47; --bad:#a83e3e; --shadow:0 12px 32px rgba(38,49,38,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--mist);color:var(--ink);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:var(--sage);padding:34px 20px 30px;color:#fff}
+.header-inner,.container{max-width:1000px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.75rem;font-weight:800;opacity:.9}
+h1{margin:8px 0;font-size:clamp(1.8rem,4vw,2.7rem);line-height:1.12}
+header p{margin:10px 0 0;max-width:700px;color:#f7f8f3}
+.container{padding:22px 16px 48px}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--cream);padding:14px;border-radius:16px;margin-bottom:18px;box-shadow:var(--shadow)}
+select,input[type=search]{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:white;color:var(--ink);min-width:180px}
+input[type=search]{flex:1;min-width:200px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:10px 15px;cursor:pointer;transition:transform .12s,opacity .12s}
+button:hover{transform:translateY(-1px)}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #c4d0ad;outline-offset:2px}
+.primary{background:var(--ink);color:white}.secondary{background:var(--sand);color:var(--ink)}.soft{background:#e4eadb;color:#33412c}
+.status{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 16px;color:var(--muted);font-size:.92rem}
+.progress{height:8px;background:#dfe3da;border-radius:20px;overflow:hidden;flex:1;min-width:100px}
+.progress>div{height:100%;background:var(--sage);width:0%;transition:width .2s}
+#questionList{display:grid;gap:14px}
+.card{background:white;border:1px solid #e4e7df;border-radius:16px;padding:20px;box-shadow:0 4px 16px rgba(38,49,38,.035)}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:start;margin-bottom:10px}
+.tag{display:inline-block;background:var(--cream);color:#536044;padding:4px 9px;border-radius:99px;font-size:.75rem;font-weight:800}
+.q-number{font-weight:800;color:var(--sage);white-space:nowrap}
+.question{font-size:1.04rem;font-weight:700;margin:0 0 14px}
+.options{display:grid;gap:8px}
+.option{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;cursor:pointer;background:#fff}
+.option:hover{background:#fafbf8;border-color:#b7c2a6}
+.option input{margin-top:5px;accent-color:var(--sage)}
+.option.correct{border-color:#80b594;background:#eff8f1}
+.option.incorrect{border-color:#d9a1a1;background:#fff2f1}
+.answer{margin-top:12px;border-radius:10px;padding:11px 13px;background:var(--cream);font-size:.93rem}
+.answer.good{background:#eff8f1;color:var(--good)}.answer.bad{background:#fff2f1;color:var(--bad)}
+.short-answer{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.empty{padding:32px;text-align:center;color:var(--muted);background:white;border-radius:14px}
+footer{text-align:center;color:var(--muted);font-size:.85rem;padding:18px}
+@media(min-width:760px){.options.cols{grid-template-columns:1fr 1fr}.card{padding:22px}}
+</style>
+</head>
+<body>
+<header><div class="header-inner">
+  <div class="eyebrow">Medical school · revision set</div>
+  <h1>Medical Review Quiz</h1>
+  <p>Psychology, Community Medicine, Biophysics, PPD and clinical scenarios. Choose an answer, check your response, and track your progress.</p>
+</div></header>
+<main class="container">
+  <section class="toolbar" aria-label="Quiz controls">
+    <select id="categoryFilter" aria-label="Filter by subject">
+      <option value="all">All subjects</option><option>HIV & Clinical</option><option>Psychology</option><option>Community Medicine</option><option>Biophysics</option><option>PPD & Volunteering</option><option>TB & Health Education</option><option>Policy & Child Protection</option>
+    </select>
+    <input id="search" type="search" placeholder="Search questions…" aria-label="Search questions">
+    <button class="primary" id="checkAll">Check answered</button>
+    <button class="secondary" id="showAll">Show all answers</button>
+    <button class="secondary" id="reset">Reset quiz</button>
+  </section>
+  <div class="status"><span id="count">0 questions</span><span id="score">Score: 0 / 0 checked</span><div class="progress"><div id="progressBar"></div></div></div>
+  <section id="questionList" aria-live="polite"></section>
+  <footer>Study aid only. Review ambiguous or course-specific answers with your lecture notes and instructors.</footer>
+</main>
+<script>
+const Q = [
+{n:49,c:"HIV & Clinical",q:"A patient presents after a recent high-risk exposure and is being evaluated for possible HIV infection. What is the best test for early diagnosis of HIV?",o:["p24 antigen and HIV antibody combination test","CD4 count","HIV RNA PCR only","HIV antibody test only","Western blot"],a:0},
+{n:50,c:"Psychology",q:"Solomon Asch's classic experiments are associated with which psychological concept?",o:["Conformity","Classical conditioning","Object permanence","Cognitive dissonance"],a:0},
+{n:51,c:"Psychology",q:"Gestalt psychology emphasizes that:",o:["The whole is greater than the sum of its parts","Learning only occurs through rewards","Behavior is entirely inherited","Memory is always accurate"],a:0},
+{n:52,c:"Psychology",q:"A man sees a snake, experiences an increased heart rate and physiological arousal, and then consciously feels fear. Which emotion theory does this describe?",o:["James–Lange theory","Cannon–Bard theory","Schachter–Singer two-factor theory","Opponent-process theory"],a:0},
+{n:53,c:"HIV & Clinical",q:"A critically injured patient needs urgent treatment. The physician makes immediate decisions in the patient's best interest without seeking consent. What type of doctor–patient relationship is demonstrated?",o:["Informative relationship","Interpretive relationship","Deliberative relationship","Paternalistic relationship","Shared decision-making"],a:3},
+{n:54,c:"Psychology",q:"Which three components are associated with psychological hardiness?",o:["Challenge, control, and commitment","Power, prestige, and performance","Stress, avoidance, and denial","Reward, punishment, and repetition"],a:0},
+{n:55,c:"HIV & Clinical",q:"When breaking bad news, which communication approach is most appropriate?",o:["Use simple language and pause to allow the patient time to understand","Give all information rapidly without stopping","Use technical terms only","Avoid checking the patient's understanding"],a:0},
+{n:56,c:"HIV & Clinical",q:"A patient becomes aggressive and speaks loudly. What is the best initial response?",o:["Raise your voice to take control","Use a calm, low tone, give personal space, and remain aware of safety","Stand very close to the patient","Argue until the patient agrees"],a:1},
+{n:57,c:"Psychology",q:"Behavioral reinforcement is a key principle of which type of learning?",o:["Insight learning","Classical conditioning","Operant conditioning","Observational learning","Trial-and-error learning"],a:2},
+{n:58,c:"Psychology",q:"Which personality trait best describes a person who is organized, responsible, disciplined, and goal-oriented?",o:["Openness","Extraversion","Conscientiousness","Agreeableness","Neuroticism"],a:2},
+{n:59,c:"Community Medicine",q:"What is holoendemicity?",o:["Infection is constant and extremely high, affecting nearly every individual from early childhood","An infection occurs only in isolated outbreaks","A disease affects only older adults","A disease is completely absent from a population"],a:0},
+{n:60,c:"Community Medicine",q:"What is the main aim of ergonomics?",o:["To fit the worker to the job by designing work to suit human capabilities","To increase working hours regardless of safety","To replace all workers with machines","To focus only on workplace decoration"],a:0},
+{n:61,c:"Community Medicine",q:"What does monitoring mean in project or health-program management?",o:["Daily or ongoing follow-up of activities during implementation","Evaluation performed only years after completion","Writing the initial proposal only","Setting the final budget only"],a:0},
+{n:62,c:"Community Medicine",q:"Which is an important quality indicator for research?",o:["It has been peer reviewed","It has no stated methods","It presents only results that support the author","It cannot be replicated"],a:0},
+{n:63,c:"Community Medicine",q:"Reasons for failure in many health systems include all of the following EXCEPT (as indicated in your notes):",o:["Black markets","Disregarding the private sector","Low health-staff salaries","Moonlighting","Regulations"],a:4, note:"Course-specific answer supplied: regulations. Verify the exact wording and intended meaning with the lecture."},
+{n:64,c:"Community Medicine",q:"Methods of improving a health system include all of the following EXCEPT:",o:["Better use of technology","Complementing public and private sectors","Family medicine","Increasing health-staff salaries","Making maximum use of existing resources"],a:null, short:"Enter the exception from your lecture notes.", note:"The supplied question does not identify the intended exception; answer key left open."},
+{n:65,c:"Community Medicine",q:"Doctors who are overweight are:",o:["Able to negatively affect society","More likely to help patients adopt a healthy lifestyle","Always more experienced","Always more knowledgeable","Always more respectful"],a:0},
+{n:66,c:"Community Medicine",q:"According to the supplied notes, what is the best method of health education?",o:["Doctor–patient contact","Television","Radio","Brochures","Posters"],a:0},
+{n:67,c:"Community Medicine",q:"Regarding the methodology section in a research report: A) Methods are comprehensive and include the study setting. C) The rationale of the study is part of it. Which option matches the supplied answer?",o:["A only","C only","Both A and C","Neither A nor C"],a:2, note:"Based on the provided key 'E – A and C'; check the original option lettering."},
+{n:68,c:"Community Medicine",q:"Regarding the rationale of a study, what was the answer in your notes?",o:["None of the above","It describes the results","It replaces the methods section","It is the same as the conclusion"],a:0, note:"The original question's other options were not supplied."},
+{n:69,c:"Community Medicine",q:"All are steps in health planning EXCEPT:",o:["Establishment of objectives and goals","Assessment of resources","Fixing priorities","Analysis of the health situation","Authority and responsibility"],a:4},
+{n:70,c:"Community Medicine",q:"A pregnant woman reports mild fever and rash during the first trimester. Her baby is born with congenital heart disease and cataracts. Which infection may have caused these anomalies?",o:["Rubella","Mumps","Varicella","Hepatitis A"],a:0},
+{n:71,c:"Community Medicine",q:"What is often the cheapest and most practical means of providing water to small communities?",o:["Groundwater","Desalination plants","Bottled water distribution","Long-distance water tankers"],a:0},
+{n:72,c:"Community Medicine",q:"Which element is NOT essential for normal physiological function?",o:["Iron","Magnesium","Manganese","Lead","Zinc"],a:3},
+{n:73,c:"Community Medicine",q:"Which option best describes the mode of transmission of an infectious agent?",o:["Ability of the organism to cause disease","Spread of the organism from its source to a host","Entry of the organism into the body","Multiplication of the organism in the host","Severity of the disease produced"],a:1},
+{n:74,c:"Community Medicine",q:"A doctor changes a prescription because of incentives from pharmaceutical companies. Which principle is most directly compromised?",o:["Accuracy","Confidentiality","Autonomy","Justice","Professional independence"],a:4},
+{n:75,c:"Community Medicine",q:"All of the following are correct about brucellosis EXCEPT:",o:["It can be transmitted through unpasteurized dairy products","It can be acquired through contact with infected animals","It may cause undulant fever","It is commonly transmitted sexually"],a:3},
+{n:76,c:"Community Medicine",q:"According to your notes, PMIEH is associated with which organization?",o:["World Health Organization (WHO)","UNESCO","World Trade Organization","International Monetary Fund"],a:0, note:"Please verify the expansion of 'PMIEH' and the intended question in your lecture notes."},
+{n:77,c:"Community Medicine",q:"What is the core idea of 'Health for All'?",o:["All people attain a level of health that allows them to live socially and economically productive lives","Every person must receive hospital care every day","All diseases must be eliminated worldwide","Health services should be limited to urban areas"],a:0},
+{n:78,c:"HIV & Clinical",q:"A nurse sustains a needle-stick injury from an HBsAg-positive patient. She completed the hepatitis B vaccine series, but her anti-HBs level is unknown. What is the next best step?",o:["Give HBIG immediately in every case","No further action is required","Check anti-HBs antibody level, then determine management","Start tenofovir","Start entecavir"],a:2, note:"Real post-exposure management depends on documented vaccine response and exposure guidance; seek occupational-health advice promptly."},
+{n:79,c:"Community Medicine",q:"Which statement about typhoid fever is WRONG?",o:["It is uncommon in many developed countries","Humans are the main reservoir","Vi antigen testing may help identify carriers","Carriers should be restricted from handling food where required","A person shedding the organism for one year after illness is called a convalescent carrier"],a:4, note:"Terminology is important: long-term shedding is generally described as chronic carriage, not convalescent carriage. Confirm the intended exam key."},
+{n:80,c:"Community Medicine",q:"All of the following are correct about critical appraisal EXCEPT:",o:["It identifies strengths of a research article","It identifies weaknesses of a research article","It should ideally be performed by trained or expert reviewers","It systematically evaluates validity, results, and relevance","All of the above"],a:4, note:"The supplied key implies 'All of the above'; however, that is not logically an exception if A–D are correct. Check the original question/options."},
+{n:81,c:"Community Medicine",q:"A patient has high fever, headache, abdominal discomfort, and joint pain. Typhoid fever is suspected. What is the best test to confirm diagnosis in the first week?",o:["Blood culture","Stool culture","Urine culture","Widal test","PCR"],a:0},
+{n:82,c:"Community Medicine",q:"What is the minimum recommended concentration of free chlorine in drinking water according to your notes?",o:["0.1 mg/L","0.2 mg/L","0.5 mg/L","2 mg/L"],a:2, note:"Chlorine requirements vary by setting and contact conditions; use the specific standard taught in your course."},
+{n:83,c:"Community Medicine",q:"Which is an example of mitigation in disaster management?",o:["Building earthquake-resistant shelters/bunkers","Distributing food after an earthquake","Treating injured people after a disaster","Reuniting families after evacuation"],a:0},
+{n:84,c:"Biophysics",q:"Regarding electromagnetic-field exposure, what is the best way to reduce exposure?",o:["Increase duration of exposure","Increase distance from the EMF source","Use stronger EMF devices","Stay closer to the source intermittently","Increase frequency of exposure"],a:1},
+{n:85,c:"Biophysics",q:"In the supplied question about symptoms reported by children in high-tech classrooms using Wi-Fi, which option was listed as the answer in your notes?",o:["Weakness","Irregular heartbeat","Fatigue","Dizziness","Nausea"],a:null,short:"Enter the answer from your lecture notes.",note:"The question wording lists symptoms but does not identify which one is the intended answer, so this is left unanswered."},
+{n:86,c:"PPD & Volunteering",q:"A boy studies the most difficult subjects early in the morning when he feels most energetic and focused. Which time-management principle does this illustrate?",o:["Use your peak-energy time for demanding tasks","Pickle jar theory only","Leave difficult tasks until the end of the day","Multitask continuously"],a:0,note:"The supplied answer was unclear ('Make most of the early times'); this is phrased as the likely intended principle."},
+{n:87,c:"PPD & Volunteering",q:"According to your notes, what helps maintain the generativity of volunteering?",o:["Ensure horizontal balance among members","Keep all decisions with one person","Prevent volunteers from contributing ideas","Replace all volunteers frequently"],a:0,note:"Verify the term 'generativity' and the phrase 'horizontal balance' against the original lecture."},
+{n:88,c:"PPD & Volunteering",q:"Which statement best describes volunteering?",o:["Participating in activities without expecting anything in return","Working only for a salary","Participating only if a qualification is required","Providing services only to family members"],a:0},
+{n:89,c:"PPD & Volunteering",q:"A student delays work despite having enough time, energy, and knowledge. What is this behavior best called?",o:["Procrastination","Delegation","Prioritization","Reflection"],a:0,note:"'Laziness' was also in the supplied note, but procrastination is the more specific term for delaying tasks."},
+{n:90,c:"PPD & Volunteering",q:"Which statement regarding volunteerism is correct?",o:["It is limited to highly educated individuals","Volunteers must receive financial compensation","Only healthcare professionals can participate","Volunteers may participate in organizational management and decision-making","Volunteers cannot contribute to planning activities"],a:3},
+{n:16,c:"TB & Health Education",q:"Children at high risk of TB live in a country where TB is endemic. Which vaccine is used to help protect children against severe forms of TB?",o:["BCG vaccine","MMR vaccine","OPV","Hepatitis B vaccine"],a:0},
+{n:17,c:"TB & Health Education",q:"A patient has a positive tuberculin skin test (Mantoux test), no symptoms other than a cough reported in the question, and a normal chest X-ray. Which condition is suggested by the supplied answer?",o:["Latent TB infection","Miliary TB","Cavitary pulmonary TB","Active TB confirmed by sputum"],a:0,note:"A cough needs clinical assessment; latent TB is diagnosed only after active TB disease has been excluded."},
+{n:18,c:"TB & Health Education",q:"A patient with TB attends a medical center and takes the prescribed medicines under the treatment-support approach described in your notes. What is it called?",o:["DOTS / directly observed treatment strategy","Passive surveillance","Contact tracing only","Chemoprophylaxis"],a:0},
+{n:19,c:"TB & Health Education",q:"A polio vaccination campaign targets a mountainous village with scattered residents and different dialects. Which health-education approach was identified in your notes as most appropriate?",o:["Radio","Academic journal","Written technical report only","Hospital noticeboard"],a:0},
+{n:20,c:"TB & Health Education",q:"A rural community needs vaccination education, but most people have low literacy. Which method was identified in your notes as most appropriate?",o:["Acting / demonstration","Newspaper editorial","Technical pamphlet","Written policy report"],a:0},
+{n:21,c:"TB & Health Education",q:"Information about polio vaccination is written in a document for policymakers and educated adults. Which mass-communication method was identified in your notes?",o:["Newspaper","Street theatre","Radio drama only","One-to-one counselling only"],a:0},
+{n:22,c:"Policy & Child Protection",q:"In policymaking, what question is being asked when examining how problems get onto the policy agenda?",o:["How do problems reach the agenda?","How is a vaccine administered?","How is a budget audited after closure?","How is an individual diagnosis confirmed?"],a:0},
+{n:23,c:"Policy & Child Protection",q:"When decision-makers review the value of a policy and consider future effects, which concept matches the supplied answer?",o:["Long-term vision","Immediate punishment","Short-term recall","Random selection"],a:0},
+{n:24,c:"Policy & Child Protection",q:"Immigration, pandemics, and large-scale public-health challenges considered by policymakers are best described as:",o:["Global problems","Individual clinical signs","Laboratory methods","Personal habits"],a:0,note:"This follows the supplied answer 'Global problems'; check the exact lecture terminology."},
+{n:25,c:"Psychology",q:"A 3-year-old boy closes his eyes and assumes his mother cannot see him. Which cognitive concept does this illustrate most closely?",o:["Egocentrism / perspective-taking limitation","Object permanence","Conservation","Abstract reasoning"],a:0,note:"Your note says 'object permanence', but the scenario is classically associated with egocentrism or difficulty understanding another person's perspective. Please verify with the lecturer."},
+{n:26,c:"Psychology",q:"A man assumes flying is highly dangerous after hearing about a recent plane crash. Which cognitive bias is illustrated?",o:["Availability heuristic","Anchoring bias","Hindsight bias","Confirmation bias"],a:0},
+{n:27,c:"Psychology",q:"A group initially feels mildly satisfied, but after discussion all members become strongly determined. Which concept was written in your notes as the answer?",o:["Egocentric thinking","Group polarization","Object permanence","Classical conditioning"],a:1,note:"The supplied answer says 'Egocentric Thinking'; group polarization is the usual term for group discussion strengthening a shared view. Verify the intended answer."},
+{n:28,c:"Policy & Child Protection",q:"In a case involving a 15-year-old, possible parental abuse, and parents requesting information, what should be considered regarding the parents?",o:["Parents have rights, but confidentiality and the child's safety must also be considered","Always disclose every detail without assessment","Ignore safeguarding concerns","Promise absolute confidentiality to everyone"],a:0,note:"Safeguarding, consent, confidentiality, and disclosure rules depend on local law and institutional policy."},
+{n:29,c:"Policy & Child Protection",q:"In the same case, if the school requests a statement, what is the best approach to disclosure?",o:["Disclose the minimum necessary information for the legitimate purpose","Send the complete medical record automatically","Share unverified allegations publicly","Refuse every request regardless of context"],a:0},
+{n:30,c:"Policy & Child Protection",q:"In a suspected child-abuse case, what is the appropriate safeguarding action?",o:["Follow safeguarding procedures and report reasonable concerns to the designated authority; do not wait for proof or confront a suspected abuser if unsafe","Ignore it until abuse is proven in court","Immediately confront the parents in every case","Share the allegation with classmates"],a:0,note:"The supplied note says 'immediately report parents even without evidence'; the safer general principle is to report reasonable concerns through the proper safeguarding pathway, not to accuse or confront parents directly. Follow local law and institutional policy."}
+];
+
+const list=document.getElementById('questionList');
+const category=document.getElementById('categoryFilter');
+const search=document.getElementById('search');
+let revealedAll=false;
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function render(){
+ const term=search.value.trim().toLowerCase(), cat=category.value;
+ const rows=Q.filter(x=>(cat==='all'||x.c===cat)&&(`${x.n} ${x.q} ${x.c} ${(x.o||[]).join(' ')}`).toLowerCase().includes(term));
+ list.innerHTML='';
+ if(!rows.length){list.innerHTML='<div class="empty">No matching questions. Try another search.</div>';updateStatus();return;}
+ rows.forEach((x,idx)=>{
+  const card=document.createElement('article');card.className='card';card.dataset.n=x.n;
+  const top=`<div class="card-top"><span class="tag">${esc(x.c)}</span><span class="q-number">Question ${x.n}</span></div><p class="question">${esc(x.q)}</p>`;
+  let body='';
+  if(x.o){
+    body='<div class="options">'+x.o.map((opt,i)=>`<label class="option" data-i="${i}"><input type="radio" name="q${x.n}" value="${i}"><span><strong>${String.fromCharCode(65+i)}.</strong> ${esc(opt)}</span></label>`).join('')+'</div>';
+  }else{
+    body=`<input class="short-answer" aria-label="Your answer for question ${x.n}" placeholder="Type your answer…" data-short="${x.n}">`;
+  }
+  card.innerHTML=top+body+`<div class="answer" hidden></div><div class="actions"><button class="soft check-one">Check answer</button><button class="secondary reveal">Reveal answer</button></div>`;
+  list.appendChild(card);
+  card.querySelector('.check-one').addEventListener('click',()=>checkCard(card,x));
+  card.querySelector('.reveal').addEventListener('click',()=>revealCard(card,x));
+  if(revealedAll) revealCard(card,x);
+ });
+ updateStatus();
+}
+function answerText(x){
+ if(x.a===null||x.a===undefined) return x.short?`Answer key not supplied. Your notes: ${x.short}`:'Answer key not supplied.';
+ return `${String.fromCharCode(65+x.a)}. ${x.o[x.a]}`;
+}
+function checkCard(card,x){
+ const box=card.querySelector('.answer');let correct=false,has=false;
+ if(x.o){
+  const chosen=card.querySelector('input[type=radio]:checked');
+  card.querySelectorAll('.option').forEach(el=>{el.classList.remove('correct','incorrect');const i=Number(el.dataset.i);if(x.a!==null&&i===x.a)el.classList.add('correct');});
+  if(!chosen){box.hidden=false;box.className='answer';box.textContent='Choose an option first.';return;}
+  has=true;correct=x.a!==null&&Number(chosen.value)===x.a;
+  if(!correct)chosen.closest('.option').classList.add('incorrect');
+ }else{
+  const inp=card.querySelector('.short-answer');has=!!inp.value.trim();
+  if(!has){box.hidden=false;box.className='answer';box.textContent='Type an answer first.';return;}
+ }
+ box.hidden=false;box.className='answer '+(correct?'good':(x.a===null?'':'bad'));
+ box.innerHTML=(x.a===null?'Answer key not supplied.':(correct?'Correct. ':'Not quite. ')+`<strong>${esc(answerText(x))}</strong>`)+(x.note?`<br><small>${esc(x.note)}</small>`:'');
+ card.dataset.checked='1';card.dataset.correct=correct?'1':'0';updateStatus();
+}
+function revealCard(card,x){
+ const box=card.querySelector('.answer');box.hidden=false;box.className='answer';
+ box.innerHTML=`<strong>${esc(answerText(x))}</strong>`+(x.note?`<br><small>${esc(x.note)}</small>`:'');
+ if(x.a!==null&&x.a!==undefined)card.querySelectorAll('.option').forEach(el=>{el.classList.remove('correct','incorrect');if(Number(el.dataset.i)===x.a)el.classList.add('correct')});
+}
+function updateStatus(){
+ const visible=[...list.querySelectorAll('.card')];
+ const checked=visible.filter(c=>c.dataset.checked==='1');
+ const score=checked.filter(c=>c.dataset.correct==='1').length;
+ document.getElementById('count').textContent=`${visible.length} question${visible.length===1?'':'s'} shown`;
+ document.getElementById('score').textContent=`Score: ${score} / ${checked.length} checked`;
+ document.getElementById('progressBar').style.width=(checked.length?score/checked.length*100:0)+'%';
+}
+document.getElementById('checkAll').addEventListener('click',()=>{document.querySelectorAll('.card').forEach(card=>{const x=Q.find(q=>String(q.n)===card.dataset.n);if(card.querySelector('input:checked')||card.querySelector('.short-answer')?.value.trim())checkCard(card,x)});});
+document.getElementById('showAll').addEventListener('click',()=>{revealedAll=true;document.querySelectorAll('.card').forEach(card=>revealCard(card,Q.find(q=>String(q.n)===card.dataset.n)));});
+document.getElementById('reset').addEventListener('click',()=>{revealedAll=false;render();});
+category.addEventListener('change',()=>{revealedAll=false;render()});search.addEventListener('input',()=>{revealedAll=false;render()});
+render();
+</script>
+</body>
+</html>
